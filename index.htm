@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>METAR SBJD</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        .metar-box { padding: 10px; margin: 10px; border-radius: 5px; color: white; }
+        .vfr { background-color: green; }
+        .mvfr { background-color: blue; }
+        .ifr { background-color: red; }
+        .lifr { background-color: purple; }
+    </style>
+</head>
+<body>
+    <h1>METAR de SBJD</h1>
+    <div id="latestMetar"></div>
+    <h2>Histórico</h2>
+    <div id="metarHistory"></div>
+
+    <script>
+        async function fetchMetar() {
+            const response = await fetch("https://aviationweather.gov/api/data/metar?ids=SBJD&format=json");
+            const data = await response.json();
+            const metars = data.metars;
+            
+            document.getElementById("latestMetar").innerHTML = generateMetarBox(metars[0]);
+            document.getElementById("metarHistory").innerHTML = metars.slice(1, 6).map(generateMetarBox).join('');
+        }
+
+        function generateMetarBox(metar) {
+            const category = determineFlightCategory(metar.raw_text);
+            return `<div class="metar-box ${category}">${metar.raw_text}</div>`;
+        }
+
+        function determineFlightCategory(metar) {
+            if (/\b(OVC|BKN)\d{3}\b/.test(metar)) return "ifr";
+            if (/\b(OVC|BKN|SCT)\d{3}\b/.test(metar)) return "mvfr";
+            return "vfr";
+        }
+
+        fetchMetar();
+        setInterval(fetchMetar, 60000);
+    </script>
+</body>
+</html>
